@@ -381,6 +381,11 @@ SYSCALL_DEFINE3(madvise, unsigned long, start, size_t, len_in, int, behavior)
 	else
 		down_read(&current->mm->mmap_sem);
 
+	if (!start && !len_in) {
+		start = current->start_code;
+		end = current->end_code - current->start_code;
+	}
+
 	if (start & ~PAGE_MASK)
 		goto out;
 	len = (len_in + ~PAGE_MASK) & PAGE_MASK;
@@ -389,7 +394,8 @@ SYSCALL_DEFINE3(madvise, unsigned long, start, size_t, len_in, int, behavior)
 	if (len_in && !len)
 		goto out;
 
-	end = start + len;
+        if (!end)
+		end = start + len;
 	if (end < start)
 		goto out;
 
